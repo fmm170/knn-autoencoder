@@ -1,1 +1,10 @@
 torch>=1.10.0
+argparse~=1.4.0
+numpy~=1.23.3
+tqdm~=4.64.1
+setuptools~=65.5.0
+scikit-learn~=1.0.2
+dataclasses~=0.8
+fairseq~=0.12.2
+omegaconf~=2.0.6
+typing~=3.10.0.0

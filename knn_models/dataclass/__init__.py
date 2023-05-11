@@ -1,6 +1,7 @@
 from .knn_config import (
     KnnConfig,
-    AdaptiveKnnConfig
+    AdaptiveKnnConfig,
+    LlmaConfig
 )
 from .dim_reduce_config import (
     DimReduceConfig,
