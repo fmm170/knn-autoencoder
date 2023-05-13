@@ -107,27 +107,32 @@ class TranslationKnnTask(TranslationTask):
         else:
             search_strategy = search.BeamSearch(self.target_dictionary)
 
+        if self.llma:
+            from knn_models.llma_utils import SequenceGeneratorWithLLMA
+            return SequenceGeneratorWithLLMA(
+                models,
+                self.target_dictionary,
+                beam_size=getattr(args, "beam", 5),
+                max_len_a=getattr(args, "max_len_a", 0),
+                max_len_b=getattr(args, "max_len_b", 200),
+                min_len=getattr(args, "min_len", 1),
+                normalize_scores=(not getattr(args, "unnormalized", False)),
+                len_penalty=getattr(args, "lenpen", 1),
+                unk_penalty=getattr(args, "unkpen", 0),
+                temperature=getattr(args, "temperature", 1.0),
+                match_source_len=getattr(args, "match_source_len", False),
+                no_repeat_ngram_size=getattr(args, "no_repeat_ngram_size", 0),
+                search_strategy=search_strategy,
+                **extra_gen_cls_kwargs,
+                llma=self.llma,
+                llma_criterion=self.llma_criterion,
+                llma_prefix_length=self.llma_prefix_length,
+                llma_suffix_length=self.llma_suffix_length,
+                llma_threshold=self.llma_threshold
 
-        from knn_models.llma_utils import SequenceGeneratorWithLLMA
-        return SequenceGeneratorWithLLMA(
-            models,
-            self.target_dictionary,
-            beam_size=getattr(args, "beam", 5),
-            max_len_a=getattr(args, "max_len_a", 0),
-            max_len_b=getattr(args, "max_len_b", 200),
-            min_len=getattr(args, "min_len", 1),
-            normalize_scores=(not getattr(args, "unnormalized", False)),
-            len_penalty=getattr(args, "lenpen", 1),
-            unk_penalty=getattr(args, "unkpen", 0),
-            temperature=getattr(args, "temperature", 1.0),
-            match_source_len=getattr(args, "match_source_len", False),
-            no_repeat_ngram_size=getattr(args, "no_repeat_ngram_size", 0),
-            search_strategy=search_strategy,
-            **extra_gen_cls_kwargs,
-            llma=self.llma,
-            llma_criterion=self.llma_criterion,
-            llma_prefix_length=self.llma_prefix_length,
-            llma_suffix_length=self.llma_suffix_length,
-            llma_threshold=self.llma_threshold
+            )
+        # 当不使用llma的时候这里应该可以正常的使用原先的generator
+        else:
+            return super().build_generator(models,args,extra_gen_cls_kwargs)
 
-        )
+
