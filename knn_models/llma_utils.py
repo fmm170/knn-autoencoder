@@ -27,13 +27,14 @@ class SequenceGeneratorWithLLMA(SequenceGenerator):
             constraints: Optional[Tensor] = None,
             bos_token: Optional[int] = None,
     ):
-        incremental_states = torch.jit.annotate(
-            List[Dict[str, Dict[str, Optional[Tensor]]]],
-            [
-                torch.jit.annotate(Dict[str, Dict[str, Optional[Tensor]]], {})
-                for i in range(self.model.models_size)
-            ],
-        )
+        # incremental_states = torch.jit.annotate(
+        #     List[Dict[str, Dict[str, Optional[Tensor]]]],
+        #     [
+        #         torch.jit.annotate(Dict[str, Dict[str, Optional[Tensor]]], {})
+        #         for i in range(self.model.models_size)
+        #     ],
+        # )
+        incremental_states = None
         net_input = sample["net_input"]
 
         if "src_tokens" in net_input:
@@ -155,7 +156,11 @@ class SequenceGeneratorWithLLMA(SequenceGenerator):
         else:
             original_batch_idxs = torch.arange(0, bsz).type_as(tokens)
 
-        for step in range(max_len + 1):  # one extra step for EOS marker
+        # 理论上，修改串并行结合应该要从这里开始
+        # 第一步要克服的就是step可能会在一个时间步内激增
+        # for step in range(max_len + 1):  # one extra step for EOS marker
+        step = 0
+        while step < max_len + 1:
             # reorder decoder internal states based on the prev choice of beams
             if reorder_state is not None:
                 if batch_idxs is not None:
@@ -171,6 +176,7 @@ class SequenceGeneratorWithLLMA(SequenceGenerator):
                 encoder_outs = self.model.reorder_encoder_out(
                     encoder_outs, reorder_state
                 )
+
             with torch.autograd.profiler.record_function(
                     "EnsembleModel: forward_decoder"
             ):
